@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "csy-simplifai-solution"
+  },
+  "targets": {
+    "csy-simplifai-solution": {
+      "hosting": {
+        "valentines2026": [
+          "valentines2026"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
