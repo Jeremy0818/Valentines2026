@@ -1,12 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useCallback, useState } from "react";
 import BalanceSlider from "@/components/BalanceSlider";
 import MovingButton from "@/components/MovingButton";
 
 export default function PuzzlePage() {
-  const router = useRouter();
   const [step1Complete, setStep1Complete] = useState(false);
   const [step2Complete, setStep2Complete] = useState(false);
 
@@ -16,8 +15,7 @@ export default function PuzzlePage() {
 
   const handleStep2Complete = useCallback(() => {
     setStep2Complete(true);
-    router.push("/success");
-  }, [router]);
+  }, []);
 
   return (
     <div className="puzzle-page min-h-screen p-6 flex flex-col items-center justify-center relative">
@@ -47,6 +45,29 @@ export default function PuzzlePage() {
           </p>
           <BalanceSlider onComplete={handleStep2Complete} />
         </section>
+      )}
+
+      {step2Complete && (
+        <main className="max-w-lg w-full flex flex-col items-center text-center relative z-10 bg-white/60 rounded-xl p-6 border-4 border-pink-400 shadow-lg">
+          <h2 className="text-3xl font-semibold text-rose-900 mb-4">
+            You did it!
+          </h2>
+          <p className="text-xl text-rose-800 mb-8 leading-relaxed">
+            Happy Valentine&apos;s Day — I love you!
+          </p>
+          <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-lg mb-8 bg-rose-200">
+            <Image
+              src="/success.png"
+              alt="Valentine"
+              fill
+              className="object-cover"
+              sizes="(max-width: 512px) 100vw, 512px"
+            />
+          </div>
+          <p className="text-rose-700">
+            Thanks for playing. You&apos;re the best.
+          </p>
+        </main>
       )}
     </div>
   );

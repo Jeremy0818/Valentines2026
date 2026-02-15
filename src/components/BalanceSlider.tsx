@@ -24,10 +24,12 @@ export default function BalanceSlider({ onComplete }: BalanceSliderProps) {
   const tiltRef = useRef(0);
   const ballRef = useRef(-1);
   const holdRef = useRef<"left" | "right" | null>(null);
+  const secondsRef = useRef(0);
 
   tiltRef.current = tilt;
   ballRef.current = ballPosition;
   holdRef.current = holdSide;
+  secondsRef.current = secondsInZone;
 
   const inZone = ballPosition >= -CENTER_ZONE && ballPosition <= CENTER_ZONE;
 
@@ -52,21 +54,19 @@ export default function BalanceSlider({ onComplete }: BalanceSliderProps) {
     };
   }, []);
 
-  // Win: ball in center zone for 3 seconds
+  // Win: ball in center zone for 3 seconds (never call onComplete inside setState)
   useEffect(() => {
     if (!inZone) {
       setSecondsInZone(0);
       return;
     }
     const t = setInterval(() => {
-      setSecondsInZone((prev) => {
-        const next = prev + 0.05;
-        if (next >= HOLD_SECONDS) {
-          clearInterval(t);
-          onComplete();
-        }
-        return Math.min(next, HOLD_SECONDS);
-      });
+      const next = Math.min(secondsRef.current + 0.05, HOLD_SECONDS);
+      setSecondsInZone(next);
+      if (next >= HOLD_SECONDS) {
+        clearInterval(t);
+        onComplete();
+      }
     }, 50);
     return () => clearInterval(t);
   }, [inZone, onComplete]);
@@ -85,6 +85,34 @@ export default function BalanceSlider({ onComplete }: BalanceSliderProps) {
 
   const handlePointerLeave = useCallback(() => {
     setHoldSide(null);
+  }, []);
+
+  // Keyboard: left/right arrows balance the tilt
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setHoldSide((prev) => (prev === "right" ? prev : "left"));
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setHoldSide((prev) => (prev === "left" ? prev : "right"));
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setHoldSide((prev) => (prev === "left" ? null : prev));
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setHoldSide((prev) => (prev === "right" ? null : prev));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
   }, []);
 
   const tiltDeg = tilt * TILT_RANGE;
@@ -122,14 +150,14 @@ export default function BalanceSlider({ onComplete }: BalanceSliderProps) {
           </div>
         </div>
         <p className="text-sm text-center mt-2 text-amber-900 font-medium">
-          Hold left or right to tilt. Keep the ball in the center!
+          Hold left or right (or ← / → arrow keys) to tilt. Keep the ball in the center!
         </p>
       </div>
 
       {/* Click-and-hold tilt control */}
       <div className="space-y-2">
         <label className="block text-center text-sm font-medium">
-          Hold left side to tilt left · Hold right side to tilt right
+          Hold left side or ← key · Hold right side or → key
         </label>
         <div
           className="relative h-14 flex cursor-pointer select-none touch-none"
